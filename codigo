@@ -70,3 +70,6 @@ legend([p1, p2], 'Conductancia de Potacio', 'Conductancia de Sodio')
 ylabel('Conductance')
 xlabel('time (ms)')
 title('Conductancia de Potacio y Sodio en una neurona')
+
+
+
