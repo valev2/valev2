@@ -1,0 +1,72 @@
+simulationTime = 100; 
+deltaT=.01;
+t=0:deltaT:simulationTime;
+
+
+changeTimes = [0]; 
+currentLevels = [1000]; 
+
+I(1:1000) = currentLevels; I(501:2000) = 0; I(2001:numel(t)) = currentLevels;
+
+
+
+g_K=36; g_Na=120; g_L=0.3;
+E_K=-12; E_Na=115; E_L=10.6;
+C=1;
+
+
+V=0; 
+alpha_n = 0.5 * ( (10-V) / (exp((10-V)/10)-1) ); 
+beta_n = .125*exp(-V/80); 
+alpha_m = 0.5 * ( (25-V) / (exp((25-V)/10)-1) ); 
+beta_m = 4*exp(-V/18); 
+alpha_h = 0.06 * exp(-V/20); 
+beta_h = 1/(exp((30-V)/10)+1); 
+
+n(1) = alpha_n/(alpha_n+beta_n); 
+m(1) = alpha_m/(alpha_m+beta_m); 
+h(1) = alpha_h/(alpha_h+beta_h); 
+
+
+for i=1:numel(t)-1
+   
+    alpha_n(i) = 0.5 * ( (10-V(i)) / (exp((10-V(i))/10)-1) );
+    beta_n(i) = .125*exp(-V(i)/80);
+    alpha_m(i) = 0.5 * ( (25-V(i)) / (exp((25-V(i))/10)-1) );
+    beta_m(i) = 4*exp(-V(i)/18);
+    alpha_h(i) = 0.06 * exp(-V(i)/20);
+    beta_h(i) = 1/(exp((30-V(i))/10)+1);
+   
+   
+    I_Na = (m(i)^3) * g_Na * h(i) * (V(i)-E_Na); 
+    I_K = (n(i)^4) * g_K * (V(i)-E_K);
+    I_L = g_L *(V(i)-E_L); 
+    I_ion = I(i) - I_K - I_Na - I_L;
+   
+   
+    V(i+1) = V(i) + deltaT*I_ion/C;
+    n(i+1) = n(i) + deltaT*(alpha_n(i) *(1-n(i)) - beta_n(i) * n(i)); 
+    m(i+1) = m(i) + deltaT*(alpha_m(i) *(1-m(i)) - beta_m(i) * m(i)); 
+    h(i+1) = h(i) + deltaT*(alpha_h(i) *(1-h(i)) - beta_h(i) * h(i)); 
+
+end
+
+
+V = V-70;
+
+plot(t,V,'LineWidth',3)
+hold on
+legend({'voltage'})
+ylabel('Voltage (mv)')
+xlabel('time (ms)')
+title('Voltaje sobre el tiempo en una neurona')
+
+
+figure
+p1 = plot(t,g_K*n.^4,'LineWidth',2);
+hold on
+p2 = plot(t,g_Na*(m.^3).*h,'r','LineWidth',2);
+legend([p1, p2], 'Conductancia de Potacio', 'Conductancia de Sodio')
+ylabel('Conductance')
+xlabel('time (ms)')
+title('Conductancia de Potacio y Sodio en una neurona')
