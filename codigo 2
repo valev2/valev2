@@ -1,0 +1,84 @@
+% Parámetros de la simulación
+simulationTime = 50; 
+deltaT = 0.01;
+t = 0:deltaT:simulationTime;
+
+% Corriente aplicada a la neurona
+I(1:1000) = 1000; I(1001:2000) = 0; I(2001:numel(t)) = 1000;
+
+% Conductancias y potenciales de equilibrio
+g_K = 36; g_Na = 120; g_L = 0.3;
+E_K = -12; E_Na = 115; E_L = 10.6;
+C = 1;
+
+% Inicialización de variables de estado
+V = 0; 
+alpha_n = 0.5 * ( (10-V) / (exp((10-V)/10)-1) ); 
+beta_n = 0.125 * exp(-V/80); 
+alpha_m = 0.5 * ( (25-V) / (exp((25-V)/10)-1) ); 
+beta_m = 4 * exp(-V/18); 
+alpha_h = 0.06 * exp(-V/20); 
+beta_h = 1 / (exp((30-V)/10) + 1); 
+
+n = alpha_n / (alpha_n + beta_n); 
+m = alpha_m / (alpha_m + beta_m); 
+h = alpha_h / (alpha_h + beta_h); 
+
+% Simulación de la neurona
+for i = 1:numel(t)-1
+    alpha_n = 0.5 * ( (10-V(i)) / (exp((10-V(i))/10)-1) );
+    beta_n = 0.125 * exp(-V(i)/80);
+    alpha_m = 0.5 * ( (25-V(i)) / (exp((25-V(i))/10)-1) );
+    beta_m = 4 * exp(-V(i)/18);
+    alpha_h = 0.06 * exp(-V(i)/20);
+    beta_h = 1 / (exp((30-V(i))/10) + 1);
+   
+    I_Na = (m(i)^3) * g_Na * h(i) * (V(i) - E_Na); 
+    I_K = (n(i)^4) * g_K * (V(i) - E_K);
+    I_L = g_L * (V(i) - E_L); 
+    I_ion = I(i) - I_K - I_Na - I_L;
+   
+    V(i+1) = V(i) + deltaT * I_ion / C;
+    n(i+1) = n(i) + deltaT * (alpha_n * (1 - n(i)) - beta_n * n(i)); 
+    m(i+1) = m(i) + deltaT * (alpha_m * (1 - m(i)) - beta_m * m(i)); 
+    h(i+1) = h(i) + deltaT * (alpha_h * (1 - h(i)) - beta_h * h(i)); 
+end
+
+% Ajuste del potencial de membrana
+V = V - 70;
+
+% Gráfico del potencial de membrana
+figure
+plot(t, V, 'LineWidth', 3)
+legend({'Voltaje'})
+ylabel('Voltaje (mV)')
+xlabel('Tiempo (ms)')
+title('Voltaje en una neurona')
+
+% Cálculo de las conductancias de potasio y sodio
+gK = g_K * n.^4;
+gNa = g_Na * (m.^3) .* h;
+
+% Gráfico de las conductancias en función del tiempo
+figure
+subplot(2,1,1)
+plot(t, gK, 'LineWidth', 2)
+ylabel('Conductancia de Potasio')
+xlabel('Tiempo (ms)')
+title('Conductancia de Potasio en una neurona')
+
+subplot(2,1,2)
+plot(t, gNa, 'r', 'LineWidth', 2)
+ylabel('Conductancia de Sodio')
+xlabel('Tiempo (ms)')
+title('Conductancia de Sodio en una neurona')
+
+% Gráfico combinado de las conductancias de potasio y sodio
+figure
+p1 = plot(t, gK, 'LineWidth', 2);
+hold on
+p2 = plot(t, gNa, 'r', 'LineWidth', 2);
+legend([p1, p2], 'Conductancia de Potasio', 'Conductancia de Sodio')
+ylabel('Conductancia')
+xlabel('Tiempo (ms)')
+title('Conductancia de Potasio y Sodio en una neurona')
